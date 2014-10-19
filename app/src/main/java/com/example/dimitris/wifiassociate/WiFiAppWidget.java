@@ -3,6 +3,7 @@ package com.example.dimitris.wifiassociate;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.Context;
+import android.content.Intent;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.widget.RemoteViews;
@@ -36,9 +37,6 @@ public class WiFiAppWidget extends AppWidgetProvider {
     void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
             int appWidgetId) {
 
-        // Construct the RemoteViews object
-        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.wi_fi_app_widget);
-
         WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
         WifiInfo wifiInfo = wifiManager.getConnectionInfo();
 
@@ -46,12 +44,15 @@ public class WiFiAppWidget extends AppWidgetProvider {
         if (bssid.equals(context.getString(R.string.no_assoc_indicator))) {
             bssid = context.getString(R.string.appwidget_text);
         }
+
+        // Construct the RemoteViews object
+        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.wi_fi_app_widget);
         views.setTextViewText(R.id.appwidget_text, bssid);
 
         // Instruct the widget manager to update the widget
         appWidgetManager.updateAppWidget(appWidgetId, views);
     }
-/*
+
     public void onReceive(Context context, Intent intent) {
 
         WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
@@ -64,7 +65,7 @@ public class WiFiAppWidget extends AppWidgetProvider {
         }
         views.setTextViewText(R.id.appwidget_text, bssid);
     }
-*/
+
     public String getAssocBssid(Context context) {
         /*
         if (WifiInfo.getDetailedStateOf(wifiInfo.getSupplicantState()) == NetworkInfo.DetailedState.CONNECTED) {
@@ -75,8 +76,7 @@ public class WiFiAppWidget extends AppWidgetProvider {
         */
         WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
         WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-        String bssid = wifiInfo.getBSSID();
-        return bssid;
+        return wifiInfo.getBSSID();
     }
 }
 
