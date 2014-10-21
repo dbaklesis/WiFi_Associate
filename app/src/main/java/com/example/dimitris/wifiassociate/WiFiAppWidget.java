@@ -18,8 +18,6 @@ public class WiFiAppWidget extends AppWidgetProvider {
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
 
-        Log.i("onUpdate", "OnUpdate");
-
         // There may be multiple widgets active, so update all of them
         final int N = appWidgetIds.length;
         for (int i=0; i<N; i++) {
@@ -34,15 +32,15 @@ public class WiFiAppWidget extends AppWidgetProvider {
         WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
         WifiInfo wifiInfo = wifiManager.getConnectionInfo();
         */
-
+/*
         String bssid = getAssocBssid(context);
         if (bssid.equals(context.getString(R.string.no_assoc_indicator))) {
-            bssid = context.getString(R.string.appwidget_text);
+          bssid = context.getString(R.string.appwidget_text);
         }
-
+*/
         // Construct the RemoteViews object
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.wi_fi_app_widget);
-        views.setTextViewText(R.id.appwidget_text, bssid);
+       // views.setTextViewText(R.id.appwidget_text, bssid);
 
         // Instruct the widget manager to update the widget
         appWidgetManager.updateAppWidget(appWidgetId, views);
@@ -50,21 +48,19 @@ public class WiFiAppWidget extends AppWidgetProvider {
 
     public void onReceive(Context context, Intent intent) {
 
-        Log.i("onReceive", "Receive Network State Change");
-
-        /*
         WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
         WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-        */
-        /*
+
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.wi_fi_app_widget);
+
 
         String bssid = getAssocBssid(context);
         if (bssid.equals(context.getString(R.string.no_assoc_indicator))) {
             bssid = context.getString(R.string.appwidget_text);
         }
-        views.setTextViewText(R.id.appwidget_text, (CharSequence)bssid);
-        */
+
+        views.setTextViewText(R.id.appwidget_text, bssid);
+
     }
 
     public String getAssocBssid(Context context) {
@@ -77,6 +73,8 @@ public class WiFiAppWidget extends AppWidgetProvider {
         */
         WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
         WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-        return wifiInfo.getBSSID();
+        String str = new String();
+        str = wifiInfo.getBSSID();
+        return str;
     }
 }
