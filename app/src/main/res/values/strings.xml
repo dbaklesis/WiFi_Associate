@@ -2,8 +2,7 @@
 <resources>
 
     <string name="app_name">WiFi Associate</string>
-    <string name="appwidget_text">no assoc</string>
     <string name="add_widget">Add widget</string>
-    <string name="no_assoc_indicator">"00:00:00:00:00:00"</string>
+    <string name="no_assoc_indicator">"no assoc"</string>
 
 </resources>

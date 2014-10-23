@@ -2,11 +2,11 @@ package com.example.dimitris.wifiassociate;
 
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
-import android.util.Log;
 import android.widget.RemoteViews;
 
 
@@ -14,6 +14,7 @@ import android.widget.RemoteViews;
  * Implementation of App Widget functionality.
  */
 public class WiFiAppWidget extends AppWidgetProvider {
+
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
@@ -28,49 +29,57 @@ public class WiFiAppWidget extends AppWidgetProvider {
     void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
             int appWidgetId) {
 
-        /*
-        WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-        */
-/*
-        String bssid = getAssocBssid(context);
-        if (bssid.equals(context.getString(R.string.no_assoc_indicator))) {
-          bssid = context.getString(R.string.appwidget_text);
-        }
-*/
-        // Construct the RemoteViews object
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.wi_fi_app_widget);
-       // views.setTextViewText(R.id.appwidget_text, bssid);
+
+        String bssid = getAssocBssid(context);
+        if (bssid == null) {
+            views.setTextViewText(R.id.appwidget_text, context.getString(R.string.no_assoc_indicator));
+        }
+        else {
+            if (bssid.equals(context.getString(R.string.no_assoc_indicator))) {
+                views.setTextViewText(R.id.appwidget_text, context.getString(R.string.no_assoc_indicator));
+            }
+            else {
+                views.setTextViewText(R.id.appwidget_text, bssid);
+            }
+        }
 
         // Instruct the widget manager to update the widget
         appWidgetManager.updateAppWidget(appWidgetId, views);
     }
 
+    @Override
     public void onReceive(Context context, Intent intent) {
 
-        WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+        super.onReceive(context, intent);
 
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.wi_fi_app_widget);
 
-
         String bssid = getAssocBssid(context);
-        if (bssid.equals(context.getString(R.string.no_assoc_indicator))) {
-            bssid = context.getString(R.string.appwidget_text);
+        if (bssid == null) {
+            views.setTextViewText(R.id.appwidget_text, context.getString(R.string.no_assoc_indicator));
+        }
+        else if (bssid.isEmpty() || (bssid.equals(context.getString(R.string.no_assoc_indicator)))) {
+                    views.setTextViewText(R.id.appwidget_text, context.getString(R.string.no_assoc_indicator));
+            } else {
+            views.setTextViewText(R.id.appwidget_text, bssid);
         }
 
-        views.setTextViewText(R.id.appwidget_text, bssid);
+        ComponentName thisAppWidget = new ComponentName(context.getPackageName(), WiFiAppWidget.class.getName());
+        final AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+        int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisAppWidget);
 
+        onUpdate(context, appWidgetManager, appWidgetIds);
+
+        //updateAppWidget(context, awm, widgId);
+
+        //awm.updateAppWidget(THIS_APPWIDGET, views);
+
+        return;
     }
 
     public String getAssocBssid(Context context) {
-        /*
-        if (WifiInfo.getDetailedStateOf(wifiInfo.getSupplicantState()) == NetworkInfo.DetailedState.CONNECTED) {
-            ssid = wifiInfo.getSSID();
-        }
 
-        return ssid;
-        */
         WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
         WifiInfo wifiInfo = wifiManager.getConnectionInfo();
         String str = new String();

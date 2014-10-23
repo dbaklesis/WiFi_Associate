@@ -13,7 +13,7 @@
         android:label= "@string/app_name">
 
         <receiver
-                android:name="WiFiAppWidget"
+                android:name=".WiFiAppWidget"
                 android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
