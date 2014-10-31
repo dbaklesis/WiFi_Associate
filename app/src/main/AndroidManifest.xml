@@ -24,5 +24,10 @@
             android:name="android.appwidget.provider"
             android:resource="@xml/wi_fi_app_widget_info" />
         </receiver>
+
+        <service
+            android:name=".WiFiService"
+            android:label="WiFiService">
+        </service>
     </application>
 </manifest>
