@@ -7,9 +7,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
-import android.net.wifi.p2p.nsd.WifiP2pServiceInfo;
+import android.os.Bundle;
 import android.util.Log;
 import android.widget.RemoteViews;
+import android.widget.Toast;
 
 
 /**
@@ -61,6 +62,14 @@ public class WiFiAppWidget extends AppWidgetProvider {
     public void onReceive(Context context, Intent intent) {
 
         super.onReceive(context, intent);
+
+        Log.d(tag, "Action is:" + intent.getAction());
+
+        Bundle bundle = intent.getExtras();
+        if (bundle != null) {
+            String str = bundle.getString("ZZZ", "empty");
+            Log.i(tag, "Broadcast Intent from Service -> " + str);  //TODO Here identifying and processing messages from Service
+        }
 
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.wi_fi_app_widget);
 

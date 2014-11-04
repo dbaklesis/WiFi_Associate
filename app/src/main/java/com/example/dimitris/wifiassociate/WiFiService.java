@@ -22,7 +22,7 @@ public class WiFiService extends Service {
     public void onCreate() {
         super.onCreate();
 
-        Log.i(tag, "in onCreate()");
+        Log.d(tag, "in onCreate()");
 
         wifiM = (WifiManager)getSystemService(Context.WIFI_SERVICE);
 
@@ -30,19 +30,20 @@ public class WiFiService extends Service {
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
-                Log.i(tag, "Wakeup Call - " + count++);
+                Log.d(tag, "Wakeup Call - " + count++);
 
                 int state = wifiM.getWifiState();
+
                 Intent intent = new Intent();
                 intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);  //TODO Is this a must have for all intents after Android 3.0?
-                intent.setAction("com.example.dimitris.wifiassociate.WiFiService");  //TODO Can we put any (unique) name?
-                intent.putExtra("ZZZ", 55555);
+                intent.setAction("com.example.dimitris.wifiassociate.Broadcast");  //TODO Can we put any (unique) name?
+                intent.putExtra("ZZZ", "SCAN RESULTS");
                 sendBroadcast(intent);
 
                 // Last run
                 if (count == 11) {
                     this.cancel();
-                    Log.i(tag, "***Done***");
+                    Log.d(tag, "***Done***");
                 }
             }
         };
@@ -56,7 +57,7 @@ public class WiFiService extends Service {
 
         super.onStartCommand(intent, flags, startId);
 
-        Log.i(tag, "onStartCommand()");
+        Log.d(tag, "onStartCommand()");
 
         return Service.START_STICKY;
     }
