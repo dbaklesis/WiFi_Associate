@@ -19,9 +19,14 @@ import android.widget.Toast;
 public class WiFiAppWidget extends AppWidgetProvider {
     final static String tag = "*** WiFiAppWidget ***";
     static boolean started = false;
+    private String broadcastMessage;
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
+
+        Log.d(tag, "onUpdate");
+
+        broadcastMessage = context.getString(R.string.broadcastMsg);
 
         // There may be multiple widgets active, so update all of them
         final int N = appWidgetIds.length;
@@ -63,12 +68,22 @@ public class WiFiAppWidget extends AppWidgetProvider {
 
         super.onReceive(context, intent);
 
-        Log.d(tag, "Action is:" + intent.getAction());
+        if (intent != null) {
+            // If the message is not from our Service component, ignore it
+            if (intent.getAction() != broadcastMessage) {  //TODO Must handle all other broadcast messages
+                return;
+            }
+        } else { //TODO Handle null intenets
+            Log.d(tag, "onReceive - intent is null");
+        }
 
         Bundle bundle = intent.getExtras();
+
+        // Message is from the service component
         if (bundle != null) {
-            String str = bundle.getString("ZZZ", "empty");
-            Log.i(tag, "Broadcast Intent from Service -> " + str);  //TODO Here identifying and processing messages from Service
+            Log.d(tag, "Broadcast received from Service component -> " + bundle.getString("ZZZ"));  //TODO Here identifying and processing messages from Service
+        } else {
+            return;
         }
 
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.wi_fi_app_widget);
@@ -103,5 +118,12 @@ public class WiFiAppWidget extends AppWidgetProvider {
         String str = new String();
         str = wifiInfo.getBSSID();
         return str;
+    }
+
+    @Override
+    public void onDeleted(Context context, int[] appWidgetIds) {
+        super.onDeleted(context, appWidgetIds);
+
+        Log.d(tag, "onDeleted");
     }
 }

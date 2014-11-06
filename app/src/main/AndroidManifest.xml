@@ -7,6 +7,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
         android:icon="@drawable/wifi"
@@ -19,13 +20,12 @@
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
                 <action android:name="android.net.wifi.WIFI_STATE_CHANGED" />
                 <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
-                <action android:name="com.example.dimitris.wifiassociate.Broadcast" />
+                <action android:name="@string/broadcastMsg" />
             </intent-filter>
         <meta-data
             android:name="android.appwidget.provider"
             android:resource="@xml/wi_fi_app_widget_info" />
         </receiver>
-
         <service
             android:name=".WiFiService"
             android:label="WiFiService">
