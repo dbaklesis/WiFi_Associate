@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.wifi.ScanResult;
+import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.IBinder;
 import android.util.Log;
@@ -18,10 +19,10 @@ import java.util.TimerTask;
  * Created by Dimitris on 29/10/2014.
  */
 public class WiFiService extends Service {
-    final String tag = "sss WiFiService sss";
-    WifiManager wifiMgr;
-    private int count= 1;
-    WifiReceiver wifiReciever;
+    private final String tag = "sss WiFiService sss";
+    private WifiManager wifiMgr;
+    //private int count= 1;
+    private WifiReceiver wifiReciever;
 
     @Override
     public void onCreate() {
@@ -33,7 +34,7 @@ public class WiFiService extends Service {
         wifiReciever = new WifiReceiver();
         registerReceiver(wifiReciever, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
 
-        WifiManager.WifiLock wifiLock = wifiMgr.createWifiLock(WifiManager.WIFI_MODE_SCAN_ONLY, tag);
+        WifiManager.WifiLock wifiLock = wifiMgr.createWifiLock(WifiManager.WIFI_MODE_SCAN_ONLY, tag); //TODO Lock here or inside loop task?
 
         if (wifiLock == null) {
             Log.d(tag, "failed to obtain wifilock");
@@ -41,18 +42,22 @@ public class WiFiService extends Service {
             return;
         }
 
+        List<WifiConfiguration> confList = wifiMgr.getConfiguredNetworks();
+
         Timer timer = new Timer();
         TimerTask timerTask = new TimerTask() {
             @Override
             public void run() {
 
                 boolean wifiEnabled = wifiMgr.isWifiEnabled();
-                if (wifiEnabled) {
-                    wifiMgr.startScan();
-                    Log.d(tag, "Scanning...(" + count + ")");
-                } else {
-                    Log.d(tag, "wifi is disabled");
+                if (wifiEnabled == false) { // Nothing to do
+                    Log.d(tag, "wifi is disabled...exiting run");
+                    return;
                 }
+
+                wifiMgr.startScan();
+                Log.d(tag, "Scanning...");
+
 /*
                 Intent intent = new Intent();
                 intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);  //TODO Is this a must have for all intents after Android 3.0?
@@ -64,19 +69,19 @@ public class WiFiService extends Service {
                 }
                 sendBroadcast(intent);
 */
+/*
                 // Last run
-                if (count++ == 99) {
+                if (count++ == 2) {
                     this.cancel();
                     Log.d(tag, "***Done***");
                 }
+*/
             }
         };
-        Log.d(tag, "+++ starting timer");
+        Log.d(tag, "+++ starting timer +++");
         timer.scheduleAtFixedRate(timerTask, 0, 15000);
 
         //this.stopSelf(); //TODO Is this the right place to stop the Service?.
-
-        return;
     }
 
     @Override
@@ -99,20 +104,26 @@ public class WiFiService extends Service {
         public void onReceive(Context c, Intent intent) {
 
             List<ScanResult> wifiList = wifiMgr.getScanResults();
-            if (wifiList != null) {
-                Log.d(tag, "*** Received scan list ***");
-                for(int i = 0; i < wifiList.size(); i++) {
+            if (wifiList == null) {
+
+                return;
+            }
+
+
+                //Log.d(tag, "*** Received scan list ***");
+                /*
+                for (ScanResult aWifiList : wifiList) {
                     Log.d(tag, "==========");
                     //Log.d(tag, wifiList.toString());
-                    ScanResult sr = wifiList.get(i);
-                    Log.d(tag, "BSSID : " + sr.BSSID);
-                    Log.d(tag, "SSID: " + sr.SSID);
-                    Log.d(tag, "level: " + sr.level);
-                    Log.d(tag, "capabilities:" + sr.capabilities);
+                    Log.d(tag, "BSSID : " + aWifiList.BSSID);
+                    Log.d(tag, "SSID: " + aWifiList.SSID);
+                    Log.d(tag, "level: " + aWifiList.level);
+                    Log.d(tag, "capabilities:" + aWifiList.capabilities);
                 }
             } else {
-                Log.d(tag, "+++ Received EMPTY scan list +++");
+                //Log.d(tag, "+++ Received EMPTY scan list +++");
             }
+            */
         }
     }
 
