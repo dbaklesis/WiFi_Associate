@@ -18,9 +18,7 @@
                 android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="android.net.wifi.WIFI_STATE_CHANGED" />
-                <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
-                <action android:name="@string/broadcastMsg" />
+                <action android:name="com.example.dimitris.wifiassociate.Broadcast" />
             </intent-filter>
         <meta-data
             android:name="android.appwidget.provider"

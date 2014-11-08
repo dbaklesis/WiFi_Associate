@@ -23,6 +23,9 @@ public class WiFiService extends Service {
     private WifiManager wifiMgr;
     //private int count= 1;
     private WifiReceiver wifiReciever;
+    private final String wifiStateChange = "android.net.wifi.STATE_CHANGED";
+    private final String wifiScanReslults = "android.net.wifi.SCAN_RESULTS";
+    //private final String broadcastMessage = "com.example.dimitris.wifiassociate.Broadcast";
 
     @Override
     public void onCreate() {
@@ -33,6 +36,7 @@ public class WiFiService extends Service {
         wifiMgr = (WifiManager)getSystemService(Context.WIFI_SERVICE);
         wifiReciever = new WifiReceiver();
         registerReceiver(wifiReciever, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
+        registerReceiver(wifiReciever, new IntentFilter(WifiManager.WIFI_STATE_CHANGED_ACTION));
 
         WifiManager.WifiLock wifiLock = wifiMgr.createWifiLock(WifiManager.WIFI_MODE_SCAN_ONLY, tag); //TODO Lock here or inside loop task?
 
@@ -42,7 +46,7 @@ public class WiFiService extends Service {
             return;
         }
 
-        List<WifiConfiguration> confList = wifiMgr.getConfiguredNetworks();
+        //List<WifiConfiguration> confList = wifiMgr.getConfiguredNetworks();
 
         Timer timer = new Timer();
         TimerTask timerTask = new TimerTask() {
@@ -57,28 +61,12 @@ public class WiFiService extends Service {
 
                 wifiMgr.startScan();
                 Log.d(tag, "Scanning...");
-
-/*
-                Intent intent = new Intent();
-                intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);  //TODO Is this a must have for all intents after Android 3.0?
-                intent.setAction("com.example.dimitris.wifiassociate.Broadcast");  //TODO Can we put any (unique) name?
-                if (wifiEenabled) {
-                    intent.putExtra("ZZZ", "SCAN RESULTS");
-                } else {
-                    intent.putExtra("ZZZ", "WIFI IS DISABLED");
-                }
-                sendBroadcast(intent);
-*/
-/*
-                // Last run
-                if (count++ == 2) {
-                    this.cancel();
-                    Log.d(tag, "***Done***");
-                }
-*/
             }
         };
         Log.d(tag, "+++ starting timer +++");
+        if (wifiMgr.isWifiEnabled()) {
+            broadcastToWidget(wifiMgr.getConnectionInfo().getBSSID()); //TODO Initial BSSID broadcast;
+        }
         timer.scheduleAtFixedRate(timerTask, 0, 15000);
 
         //this.stopSelf(); //TODO Is this the right place to stop the Service?.
@@ -91,7 +79,7 @@ public class WiFiService extends Service {
 
         Log.d(tag, "onStartCommand()");
 
-        return Service.START_STICKY;
+        return Service.START_NOT_STICKY;
     }
 
     @Override
@@ -103,12 +91,35 @@ public class WiFiService extends Service {
     class WifiReceiver extends BroadcastReceiver {
         public void onReceive(Context c, Intent intent) {
 
-            List<ScanResult> wifiList = wifiMgr.getScanResults();
-            if (wifiList == null) {
-
+            if (intent == null) {
                 return;
             }
 
+            /*
+            if ((intent.getAction().equals(wifiScanReslults) == false) &&
+                    (intent.getAction().equals(wifiStateChange) == false)) {  //TODO Are these messages enough?
+                return;
+            }
+            */
+            if ((intent.getAction().equals(WifiManager.WIFI_STATE_CHANGED_ACTION) == false) &&
+                    (intent.getAction().equals(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION) == false)) {  //TODO Are these messages enough?
+                return;
+            }
+
+            //if (intent.getAction().equals(wifiScanReslults)) {
+            if (intent.getAction().equals(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)) {
+                List<ScanResult> wifiList = wifiMgr.getScanResults();
+                if (wifiList == null) {
+                    return;
+                } else {    //TODO Handle the list of a wifi access points detected.
+                    return;
+                }
+            }
+
+            if (intent.getAction().equals(WifiManager.WIFI_STATE_CHANGED_ACTION)== true) {
+                handleWifiStateChange(intent);
+                return;
+            }
 
                 //Log.d(tag, "*** Received scan list ***");
                 /*
@@ -125,6 +136,25 @@ public class WiFiService extends Service {
             }
             */
         }
+
+        private void handleWifiStateChange(Intent intent) {
+            if (wifiMgr.getWifiState() == WifiManager.WIFI_STATE_DISABLED)  {
+                broadcastToWidget("disabled");
+                return;
+            } else if (wifiMgr.getWifiState() == WifiManager.WIFI_STATE_ENABLED) {
+                broadcastToWidget(wifiMgr.getConnectionInfo().getBSSID());
+                return;
+            }
+        }
+    }
+
+    private void broadcastToWidget(String bssid) {
+
+        Intent intent = new Intent();
+        intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);  //TODO Is this a must have for all intents after Android 3.0?
+        intent.setAction("com.example.dimitris.wifiassociate.Broadcast");  //TODO Can we put any (unique) name?
+        intent.putExtra("BSSID", bssid);
+        sendBroadcast(intent);
     }
 
     @Override
