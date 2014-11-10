@@ -24,6 +24,8 @@ public class WiFiAppWidget extends AppWidgetProvider {
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
 
+        super.onUpdate(context, appWidgetManager, appWidgetIds);
+
         Log.d(tag, "onUpdate");
 
         // There may be multiple widgets active, so update all of them
@@ -32,6 +34,9 @@ public class WiFiAppWidget extends AppWidgetProvider {
             //updateAppWidget(context, appWidgetManager, appWidgetIds[i]);
        // }
         updateAppWidget(context, appWidgetManager, appWidgetIds, context.getString(R.string.no_assoc_indicator));
+
+        Intent msg = new Intent(context, WiFiService.class);
+        context.startService(msg);
     }
 
     void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
@@ -44,16 +49,12 @@ public class WiFiAppWidget extends AppWidgetProvider {
 
             // Instruct the widget manager to update the widget
             appWidgetManager.updateAppWidget(appWidgetIds[i], views);
-
-            Intent msg = new Intent(context, WiFiService.class);
-            context.startService(msg);
         }
     }
 
     @Override
     public void onReceive(Context context, Intent intent) {
 
-        Log.d(tag, ")))Received(((");
         super.onReceive(context, intent);
 
         if (intent == null) {
@@ -72,7 +73,11 @@ public class WiFiAppWidget extends AppWidgetProvider {
             return;
         }
 
-        Log.d(tag, "BSSID is: " + bundle.getString("BSSID"));
+        String bssid = bundle.getString("BSSID");
+        if (bssid == null) {
+            bssid = "disabled";
+        }
+        //Log.d(tag, "BSSID is: " + bundle.getString("BSSID"));
         //RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.wi_fi_app_widget);
         //views.setTextViewText(R.id.appwidget_text, bundle.getString("BSSID"));
 
@@ -80,7 +85,7 @@ public class WiFiAppWidget extends AppWidgetProvider {
         final AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
         int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisAppWidget);
 
-        updateAppWidget(context, appWidgetManager, appWidgetIds, bundle.getString("BSSID"));
+        updateAppWidget(context, appWidgetManager, appWidgetIds, bssid);
 
         //updateAppWidget(context, awm, widgId);
 
