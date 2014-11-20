@@ -12,6 +12,7 @@ import android.net.wifi.WifiManager;
 import android.os.IBinder;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -22,11 +23,11 @@ import java.util.TimerTask;
 public class WiFiService extends Service {
     private final String tag = "sss WiFiService sss";
     private WifiManager wifiMgr;
-    //private int count= 1;
     private WifiReceiver wifiReciever;
-    private final String wifiStateChange = "android.net.wifi.STATE_CHANGED";
-    private final String wifiScanReslults = "android.net.wifi.SCAN_RESULTS";
-    //private final String broadcastMessage = "com.example.dimitris.wifiassociate.Broadcast";
+	private final static int NUMBER_OF_PASSES = 3;
+	private int scanPass = 0;
+    private List<ScanResult> scanResultList;
+    private List<AP> trackedAPList;
 
     @Override
     public void onCreate() {
@@ -39,7 +40,6 @@ public class WiFiService extends Service {
         registerReceiver(wifiReciever, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
         registerReceiver(wifiReciever, new IntentFilter(WifiManager.WIFI_STATE_CHANGED_ACTION));
 
-        /*
         WifiManager.WifiLock wifiLock = wifiMgr.createWifiLock(WifiManager.WIFI_MODE_SCAN_ONLY, tag); //TODO Lock here or inside loop task?
 
         if (wifiLock == null) {
@@ -47,7 +47,6 @@ public class WiFiService extends Service {
             Log.d(tag, "aborting");
             return;
         }
-        */
 
         //List<WifiConfiguration> confList = wifiMgr.getConfiguredNetworks();
 
@@ -56,16 +55,14 @@ public class WiFiService extends Service {
             @Override
             public void run() {
 
-                boolean wifiEnabled = wifiMgr.isWifiEnabled();
-                if (wifiEnabled == false) { // Nothing to do
-                    //Log.d(tag, "wifi is disabled...exiting run");
+                if (wifiMgr.isWifiEnabled() == false) { // Nothing to do
                     return;
                 }
 
                 wifiMgr.startScan();
-                //Log.d(tag, "Scanning...");
             }
         };
+
         Log.d(tag, "+++ starting timer +++");
         if (wifiMgr.isWifiEnabled()) {
             broadcastToWidget(wifiMgr.getConnectionInfo().getBSSID()); //TODO Initial BSSID broadcast;
@@ -87,7 +84,7 @@ public class WiFiService extends Service {
             broadcastToWidget(null);
         }
 
-        return Service.START_NOT_STICKY;
+        return Service.START_STICKY;
     }
 
     @Override
@@ -104,77 +101,138 @@ public class WiFiService extends Service {
             }
 
             if (intent.getAction().equals(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)) {
+				handleScanResultsAvailable(intent);
+				scanPass++;
+				if (scanPass == NUMBER_OF_PASSES) {
+                    processScanResults();
+                    scanResultList = null; //Destroy list of APs
+                    scanPass = 0;
+				}
                 return;
             }
 
             if (intent.getAction().equals(WifiManager.WIFI_STATE_CHANGED_ACTION) == true) {
                 handleWifiStateChange(intent);
                 return;
-            } else {
-                Log.d(tag, "Unhandled broadcast");
-                return;
             }
 
-            /*
-            for (ScanResult aWifiList : wifiList) {
-                //Log.d(tag, wifiList.toString());
-                Log.d(tag, "BSSID : " + aWifiList.BSSID);
-                Log.d(tag, "SSID: " + aWifiList.SSID);
-                Log.d(tag, "level: " + aWifiList.level);
-                Log.d(tag, "capabilities:" + aWifiList.capabilities);
-            }
-            */
+            Log.d(tag, "Unhandled broadcast action " + intent.getAction() );
+            return;
 
         }
     }
 
-        private void handleWifiStateChange(Intent intent) {
+    private class AP {
+        private int level;
+		private int pass;
+        private ScanResult ap;
 
-            if (intent.getAction() == WifiManager.WIFI_STATE_CHANGED_ACTION) {
+        AP (ScanResult newap) {
+            level = 0;
+			pass = 0;
+            ap = newap;
+        }
 
-                if (wifiMgr.getWifiState() == WifiManager.WIFI_STATE_DISABLED) {
-                    broadcastToWidget("disabled");
-                    return;
-                }  else if (wifiMgr.getWifiState() == WifiManager.WIFI_STATE_DISABLING) {
-                    return; //TODO something to do here?
+        protected String getBSSID() {
+            return ap.BSSID;
+        }
+
+        protected int getLevel() {
+            return level;
+        }
+		
+		protected void addLevel(int lvl) {
+			level += lvl;
+		}
+		
+		protected int getPass() {
+			return pass;
+		}
+		
+		protected void addPass() {
+			pass++;
+		}
+    }
+
+    private void handleScanResultsAvailable(Intent intent) {
+
+        List<ScanResult> wifiList = wifiMgr.getScanResults();
+
+        // Scan for matching SSIDS and add them to a list
+
+        // Prepare my ssid(remove unwanted characters)
+        String mySsid = wifiMgr.getConnectionInfo().getSSID();
+        String cleanMySsid = mySsid.replace("\"", "");
+
+        trackedAPList = null;
+        for (ScanResult scanResultAP : scanResultList) {
+            if (cleanMySsid.equals(scanResultAP.SSID)) { // If the AP from the scan is in the tracked list.
+                if (trackedAPList == null) {
+                    trackedAPList = new ArrayList<AP>();
+                    AP newTrackedAP = new AP(scanResultAP);
+                    trackedAPList.add(newTrackedAP);
                 }
-                else if ((wifiMgr.getWifiState() == WifiManager.WIFI_STATE_ENABLED)) {
-
-                        Timer bssidTimer = new Timer();
-                        TimerTask bssidTimerTask = new TimerTask() {
-                            @Override
-                            public void run() {
-
-                                final WifiInfo wifiinfo = wifiMgr.getConnectionInfo();
-                                String bssid = wifiinfo.getBSSID();
-                                if (bssid == null) {
-                                    return;
-                                }
-
-                                if (bssid.equals("00:00:00:00:00:00:00")) {
-                                    return;
-                                }
-
-                                broadcastToWidget(bssid);
-
-                            }
-                        };
-
-                        bssidTimer.schedule(bssidTimerTask, 0, 2000);
-
-                    //Log.d(tag, "ENABLED/ENABLING is: " + wifiMgr.getWifiState());
-                            return;
-                } else if (wifiMgr.getWifiState() == WifiManager.WIFI_STATE_ENABLING) {
-                    return; //TODO something to do here?
-                } else {
-                    Log.d(tag, "WIFI_STATE: " + wifiMgr.getWifiState() + " not handled yet");
-                    return; //TODO Process more broadcast message types
+                /*
+                for (AP trackedAP : trackedAPList) {  //Match scanresult AP against tracked APs.
+                    if (scanResultAP.BSSID.equals(trackedAP.getBSSID())) { //Scan result AP is in the tracked list
+                        trackedAP.addLevel(scanResultAP.level);
+                        trackedAP.addPass();
+                    }
                 }
-            } else {
-                Log.d(tag, "ACTION: " + intent.getAction() + " not handled yet");
-                return;
+                */
             }
         }
+    }
+
+    private void handleWifiStateChange(Intent intent) {
+
+        if (wifiMgr.getWifiState() == WifiManager.WIFI_STATE_DISABLED) {
+            broadcastToWidget("disabled");
+            return;
+        } else if (wifiMgr.getWifiState() == WifiManager.WIFI_STATE_DISABLING) {
+            return; //TODO something to do here?
+        } else if ((wifiMgr.getWifiState() == WifiManager.WIFI_STATE_ENABLED)) {
+
+            Timer bssidTimer = new Timer();
+            TimerTask bssidTimerTask = new TimerTask() {
+                @Override
+                public void run() {
+
+                    delayWiFiStateBroadcast();
+                }
+            };
+
+            bssidTimer.schedule(bssidTimerTask, 0, 3000);
+
+            //Log.d(tag, "ENABLED/ENABLING is: " + wifiMgr.getWifiState());
+            return;
+        } else if (wifiMgr.getWifiState() == WifiManager.WIFI_STATE_ENABLING) {
+            return; //TODO something to do here?
+        } else {
+            Log.d(tag, "WIFI_STATE_CHANGED_ACTION State " + wifiMgr.getWifiState() + " not handled.");
+            return; //TODO Process more broadcast message types
+        }
+    }
+
+    protected void processScanResults() {
+
+
+    }
+
+    private void delayWiFiStateBroadcast() {
+
+        final WifiInfo wifiinfo = wifiMgr.getConnectionInfo();
+        String bssid = wifiinfo.getBSSID();
+        if (bssid == null) {
+            return;
+        }
+
+        if (bssid.equals("00:00:00:00:00:00")) {
+            return;
+        }
+        broadcastToWidget(bssid);
+
+    }
 
 
     private void broadcastToWidget(String bssid) {
