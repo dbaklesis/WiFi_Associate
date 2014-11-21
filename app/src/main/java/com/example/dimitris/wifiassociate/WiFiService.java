@@ -164,22 +164,30 @@ public class WiFiService extends Service {
         String mySsid = wifiMgr.getConnectionInfo().getSSID();
         String cleanMySsid = mySsid.replace("\"", "");
 
-        trackedAPList = null;
         for (ScanResult scanResultAP : scanResultList) {
             if (cleanMySsid.equals(scanResultAP.SSID)) { // If the AP from the scan is in the tracked list.
-                if (trackedAPList == null) {
+                if (trackedAPList == null) {  // If tracked access point list is empty.
                     trackedAPList = new ArrayList<AP>();
-                    AP newTrackedAP = new AP(scanResultAP);
-                    trackedAPList.add(newTrackedAP);
                 }
-                /*
+                // Is this access point being tracked?
+                // If not, add it to the tracked access point list.
+                boolean found = false;
                 for (AP trackedAP : trackedAPList) {  //Match scanresult AP against tracked APs.
                     if (scanResultAP.BSSID.equals(trackedAP.getBSSID())) { //Scan result AP is in the tracked list
                         trackedAP.addLevel(scanResultAP.level);
                         trackedAP.addPass();
+                        found = true;
+                        break;
                     }
                 }
-                */
+
+                if (found == false) {
+                    AP newTrackedAP = new AP(scanResultAP);
+                    newTrackedAP.addLevel(scanResultAP.level);
+                    newTrackedAP.addPass();
+                    trackedAPList.add(newTrackedAP);
+                }
+
             }
         }
     }
