@@ -156,7 +156,11 @@ public class WiFiService extends Service {
 
     private void handleScanResultsAvailable(Intent intent) {
 
-        List<ScanResult> wifiList = wifiMgr.getScanResults();
+        List<ScanResult> scanResultList = wifiMgr.getScanResults();
+
+        if (scanResultList == null) {
+            return;
+        }
 
         // Scan for matching SSIDS and add them to a list
 
@@ -164,22 +168,34 @@ public class WiFiService extends Service {
         String mySsid = wifiMgr.getConnectionInfo().getSSID();
         String cleanMySsid = mySsid.replace("\"", "");
 
-        trackedAPList = null;
+        if (scanPass == 0) {
+            trackedAPList = null;
+        }
+
         for (ScanResult scanResultAP : scanResultList) {
-            if (cleanMySsid.equals(scanResultAP.SSID)) { // If the AP from the scan is in the tracked list.
+            if (cleanMySsid.equals(scanResultAP.SSID)) { // My SSID matches another's AP.
                 if (trackedAPList == null) {
                     trackedAPList = new ArrayList<AP>();
-                    AP newTrackedAP = new AP(scanResultAP);
-                    trackedAPList.add(newTrackedAP);
+                    AP trackedAP = new AP(scanResultAP);
+                    trackedAP.addLevel(scanResultAP.level);
+                    trackedAP.addPass();
+                    trackedAPList.add(trackedAP);
+                    return;
                 }
-                /*
-                for (AP trackedAP : trackedAPList) {  //Match scanresult AP against tracked APs.
-                    if (scanResultAP.BSSID.equals(trackedAP.getBSSID())) { //Scan result AP is in the tracked list
+
+                for (AP trackedAP : trackedAPList) {  // Is the matched AP in the tracked list?
+                    if (scanResultAP.BSSID.equals(trackedAP.getBSSID())) { // Scan result AP is in the tracked list
                         trackedAP.addLevel(scanResultAP.level);
                         trackedAP.addPass();
+                        break;
+                    }
+
+                    if (trackedAP == trackedAPList.get(trackedAPList.size()-1)) {  // If this is the last iteration, then the AP is not in the tracked list.
+                        trackedAP.addLevel(scanResultAP.level);
+                        trackedAP.addPass();
+                        trackedAPList.add(trackedAP);
                     }
                 }
-                */
             }
         }
     }
