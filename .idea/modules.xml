@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/WiFiAssociate.iml" filepath="$PROJECT_DIR$/WiFiAssociate.iml" />
+      <module fileurl="file://$PROJECT_DIR$/WiFi_Associate.iml" filepath="$PROJECT_DIR$/WiFi_Associate.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>
