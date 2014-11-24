@@ -156,8 +156,11 @@ public class WiFiService extends Service {
 
     private void handleScanResultsAvailable(Intent intent) {
 
-        List<ScanResult> wifiList = wifiMgr.getScanResults();
+        List<ScanResult> scanResultList = wifiMgr.getScanResults();
 
+        if (scanResultList == null) {  // Nothing to do
+            return;
+        }
         // Scan for matching SSIDS and add them to a list
 
         // Prepare my ssid(remove unwanted characters)
