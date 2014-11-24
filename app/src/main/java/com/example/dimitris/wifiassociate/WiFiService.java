@@ -176,31 +176,6 @@ public class WiFiService extends Service {
         }
 
         for (ScanResult scanResultAP : scanResultList) {
-            if (cleanMySsid.equals(scanResultAP.SSID)) { // My SSID matches another's AP.
-                if (trackedAPList == null) {
-                    trackedAPList = new ArrayList<AP>();
-                    AP trackedAP = new AP(scanResultAP);
-                    trackedAP.addLevel(scanResultAP.level);
-                    trackedAP.addPass();
-                    trackedAPList.add(trackedAP);
-                    return;
-                }
-
-                for (AP trackedAP : trackedAPList) {  // Is the matched AP in the tracked list?
-                    if (scanResultAP.BSSID.equals(trackedAP.getBSSID())) { // Scan result AP is in the tracked list
-                        trackedAP.addLevel(scanResultAP.level);
-                        trackedAP.addPass();
-                        break;
-                    }
-
-                    if (trackedAP == trackedAPList.get(trackedAPList.size()-1)) {  // If this is the last iteration, then the AP is not in the tracked list.
-                        trackedAP.addLevel(scanResultAP.level);
-                        trackedAP.addPass();
-                        trackedAPList.add(trackedAP);
-                    }
-                }
-
-        for (ScanResult scanResultAP : scanResultList) {
             if (cleanMySsid.equals(scanResultAP.SSID)) { // If the AP from the scan is in the tracked list.
                 if (trackedAPList == null) {  // If tracked access point list is empty.
                     trackedAPList = new ArrayList<AP>();
@@ -223,8 +198,6 @@ public class WiFiService extends Service {
                     newTrackedAP.addPass();
                     trackedAPList.add(newTrackedAP);
                 }
-
->>>>>>> 46748173abda24ac41149ad87339a3bcd93b67e7
             }
         }
     }
